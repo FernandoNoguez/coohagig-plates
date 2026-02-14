@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Controle de Placas (Next.js + MongoDB)
 
-## Getting Started
+Aplicação para cadastro, consulta e remoção de placas de carro com:
 
-First, run the development server:
+- Cadastro de placas no banco MongoDB.
+- Busca exata e parcial (ex: `IVG`, `IV`).
+- Remoção de placas não autorizadas.
+- Exibição dos últimos cadastros para conferência (evitar erro de digitação).
+- Resultado destacado em **verde** quando encontra e **vermelho** quando não encontra.
+- Layout responsivo para celular, tablet e desktop.
+- Todas as chamadas feitas pelo backend do Next.js (`/api/plates`).
+
+## Configuração
+
+1. Instale as dependências:
+
+```bash
+npm install
+```
+
+2. Configure as variáveis de ambiente (`.env.local`):
+
+```env
+MONGODB_URI="mongodb+srv://fernandonoguez:<db_password>@date.yvw9t.mongodb.net/?appName=Date"
+```
+
+> Substitua `<db_password>` pela senha real do banco.
+
+3. Execute o projeto:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Acesse:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API
 
-## Learn More
+### `POST /api/plates`
+Cadastra uma placa.
 
-To learn more about Next.js, take a look at the following resources:
+Body JSON:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```json
+{ "plate": "IVG8470" }
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### `DELETE /api/plates`
+Remove uma placa.
 
-## Deploy on Vercel
+Body JSON:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```json
+{ "plate": "IVG8470" }
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### `GET /api/plates?query=IVG`
+Busca placas cadastradas por termo parcial.
+
+### `GET /api/plates?recent=1`
+Retorna as últimas 5 placas cadastradas (mais recente primeiro).
