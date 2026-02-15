@@ -1,14 +1,14 @@
-# Controle de Placas (Next.js + MongoDB)
+# Controle de Placas (Next.js + MongoDB + NextAuth)
 
 Aplicação para cadastro, consulta e remoção de placas de carro com:
 
-- Cadastro de placas no banco MongoDB.
-- Busca exata e parcial (ex: `IVG`, `IV`).
-- Remoção de placas não autorizadas.
-- Exibição dos últimos cadastros para conferência (evitar erro de digitação).
-- Resultado destacado em **verde** quando encontra e **vermelho** quando não encontra.
-- Layout responsivo para celular, tablet e desktop.
-- Todas as chamadas feitas pelo backend do Next.js (`/api/plates`).
+- Login com **NextAuth Credentials Provider** usando os campos `user` e `password`.
+- Cadastro público de usuário com `user`, `email` e `password`.
+- E-mail obrigatório no cadastro para suporte a fluxo de recuperação de senha.
+- Controle de **cargo** (`user` e `admin`) para autorização.
+- Rota administrativa de cadastro de usuários (`/admin/cadastro`) visível apenas para admin.
+- Rotas privadas para cadastro/listagem/busca/remoção de placas (`/plates` e `/api/plates`).
+- Exibição dos últimos cadastros para conferência.
 
 ## Configuração
 
@@ -18,40 +18,57 @@ Aplicação para cadastro, consulta e remoção de placas de carro com:
 npm install
 ```
 
-> Substitua `<db_password>` pela senha real do banco.
+2. Configure as variáveis de ambiente no `.env.local`:
 
-2. Execute o projeto:
+```bash
+MONGODB_URI="sua-string-do-mongodb"
+AUTH_SECRET="uma-chave-secreta-longa"
+```
+
+3. Execute o projeto:
 
 ```bash
 npm run dev
 ```
 
-3. Acesse:
+4. Acesse:
 
-- [http://localhost:3000](http://localhost:3000)
+- Login: [http://localhost:3000](http://localhost:3000)
+- Cadastro público: [http://localhost:3000/cadastro](http://localhost:3000/cadastro)
+- Painel de placas (privado): [http://localhost:3000/plates](http://localhost:3000/plates)
+- Cadastro de usuários (somente admin): [http://localhost:3000/admin/cadastro](http://localhost:3000/admin/cadastro)
 
 ## API
 
-### `POST /api/plates`
-Cadastra uma placa.
+### `POST /api/register`
+Cadastra usuário comum (`role: user`).
 
 Body JSON:
 
 ```json
-{ "plate": "IVG8470" }
+{ "user": "usuario", "email": "usuario@email.com", "password": "123456" }
 ```
+
+### `POST /api/admin/users`
+Cadastra usuário pelo admin, permitindo definir cargo (`user` ou `admin`).
+
+Body JSON:
+
+```json
+{ "user": "novo-admin", "email": "admin@email.com", "password": "123456", "role": "admin" }
+```
+
+### `POST /api/auth/[...nextauth]`
+Fluxo de autenticação do NextAuth com `credentials` (`user` e `password`).
+
+### `POST /api/plates`
+Cadastra uma placa (autenticado).
 
 ### `DELETE /api/plates`
-Remove uma placa.
-
-Body JSON:
-
-```json
-{ "plate": "IVG8470" }
-```
+Remove uma placa (autenticado).
 
 ### `GET /api/plates?query=IVG`
-Busca placas cadastradas por termo parcial.
+Busca placas por termo parcial (autenticado).
 
 ### `GET /api/plates?recent=1`
-Retorna as últimas 5 placas cadastradas (mais recente primeiro).
+Retorna as últimas 5 placas cadastradas (autenticado).
