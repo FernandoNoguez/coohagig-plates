@@ -1,18 +1,39 @@
 import { NextResponse } from "next/server";
-import { createUser, findUserByEmail, findUserByUsername } from "@/lib/users";
+import { auth } from "@/auth";
+import {
+  createUser,
+  findUserByEmail,
+  findUserByUsername,
+  type UserRole,
+} from "@/lib/users";
 import { hashPassword } from "@/lib/password";
 
 function normalizeUsername(value: string) {
   return value.trim();
 }
 
+function parseRole(value: string): UserRole {
+  return value === "admin" ? "admin" : "user";
+}
+
 export async function POST(request: Request) {
   try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    }
+
+    if (session.user.role !== "admin") {
+      return NextResponse.json({ error: "Acesso restrito ao administrador." }, { status: 403 });
+    }
+
     const body = await request.json();
 
     const user = normalizeUsername(String(body?.user ?? ""));
     const email = String(body?.email ?? "").trim().toLowerCase();
     const password = String(body?.password ?? "");
+    const role = parseRole(String(body?.role ?? "user"));
 
     if (!user || !email || !password) {
       return NextResponse.json(
@@ -30,18 +51,12 @@ export async function POST(request: Request) {
 
     const existingUser = await findUserByUsername(user);
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Usuário já cadastrado." },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "Usuário já cadastrado." }, { status: 409 });
     }
 
     const existingEmail = await findUserByEmail(email);
     if (existingEmail) {
-      return NextResponse.json(
-        { error: "E-mail já cadastrado." },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "E-mail já cadastrado." }, { status: 409 });
     }
 
     const { hash, salt } = hashPassword(password);
@@ -49,19 +64,16 @@ export async function POST(request: Request) {
     await createUser({
       user,
       email,
-      role: "user",
+      role,
       passwordHash: hash,
       passwordSalt: salt,
     });
 
     return NextResponse.json({
-      message: "Cadastro realizado com sucesso. Faça seu login.",
+      message: `Usuário ${user} cadastrado com sucesso como ${role}.`,
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Não foi possível concluir o cadastro." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Falha ao cadastrar usuário." }, { status: 500 });
   }
 }

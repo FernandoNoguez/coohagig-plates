@@ -3,8 +3,10 @@
 Aplicação para cadastro, consulta e remoção de placas de carro com:
 
 - Login com **NextAuth Credentials Provider** usando os campos `user` e `password`.
-- Cadastro de usuário com `user`, `email` e `password`.
+- Cadastro público de usuário com `user`, `email` e `password`.
 - E-mail obrigatório no cadastro para suporte a fluxo de recuperação de senha.
+- Controle de **cargo** (`user` e `admin`) para autorização.
+- Rota administrativa de cadastro de usuários (`/admin/cadastro`) visível apenas para admin.
 - Rotas privadas para cadastro/listagem/busca/remoção de placas (`/plates` e `/api/plates`).
 - Exibição dos últimos cadastros para conferência.
 
@@ -32,18 +34,28 @@ npm run dev
 4. Acesse:
 
 - Login: [http://localhost:3000](http://localhost:3000)
-- Cadastro de usuário: [http://localhost:3000/cadastro](http://localhost:3000/cadastro)
+- Cadastro público: [http://localhost:3000/cadastro](http://localhost:3000/cadastro)
 - Painel de placas (privado): [http://localhost:3000/plates](http://localhost:3000/plates)
+- Cadastro de usuários (somente admin): [http://localhost:3000/admin/cadastro](http://localhost:3000/admin/cadastro)
 
 ## API
 
 ### `POST /api/register`
-Cadastra usuário.
+Cadastra usuário comum (`role: user`).
 
 Body JSON:
 
 ```json
-{ "user": "admin", "email": "admin@email.com", "password": "123456" }
+{ "user": "usuario", "email": "usuario@email.com", "password": "123456" }
+```
+
+### `POST /api/admin/users`
+Cadastra usuário pelo admin, permitindo definir cargo (`user` ou `admin`).
+
+Body JSON:
+
+```json
+{ "user": "novo-admin", "email": "admin@email.com", "password": "123456", "role": "admin" }
 ```
 
 ### `POST /api/auth/[...nextauth]`

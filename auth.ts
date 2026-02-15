@@ -1,9 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import authConfig from "@/auth.config";
 import { findUserByUsername } from "@/lib/users";
 import { verifyPassword } from "@/lib/password";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -33,34 +35,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user._id.toString(),
           name: user.user,
           email: user.email,
+          role: user.role,
         };
       },
     }),
   ],
-  pages: {
-    signIn: "/",
-  },
   callbacks: {
-
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isPublicPage =
-        nextUrl.pathname === "/" ||
-        nextUrl.pathname.startsWith("/cadastro") ||
-        nextUrl.pathname.startsWith("/api/auth") ||
-        nextUrl.pathname.startsWith("/api/register") ||
-        nextUrl.pathname.startsWith("/_next") ||
-        nextUrl.pathname === "/favicon.ico";
-
-      if (!isLoggedIn && !isPublicPage) {
-        return false;
+    ...authConfig.callbacks,
+    jwt({ token, user }) {
+      if (user) {
+        token.role = (user as { role?: string }).role ?? "user";
       }
 
-      if (isLoggedIn && nextUrl.pathname === "/") {
-        return Response.redirect(new URL("/plates", nextUrl));
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        session.user.role = String(token.role ?? "user") as "user" | "admin";
       }
 
-      return true;
+      return session;
     },
   },
 });

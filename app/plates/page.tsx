@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
 
@@ -12,6 +13,12 @@ type SearchResponse = {
 
 type LatestResponse = {
   latest: string[];
+};
+
+type SessionResponse = {
+  user?: {
+    role?: "user" | "admin";
+  };
 };
 
 function normalizePlate(value: string) {
@@ -29,6 +36,7 @@ export default function Home() {
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [isLoadingRegister, setIsLoadingRegister] = useState(false);
   const [isLoadingRemove, setIsLoadingRemove] = useState(false);
+  const [role, setRole] = useState<"user" | "admin">("user");
 
   const searchColor = useMemo(() => {
     if (!searchResult) {
@@ -51,6 +59,22 @@ export default function Home() {
 
   useEffect(() => {
     fetchLatest();
+
+    async function fetchSession() {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (!response.ok) return;
+
+        const session: SessionResponse = await response.json();
+        if (session.user?.role === "admin") {
+          setRole("admin");
+        }
+      } catch {
+        // sem bloqueio da interface em caso de falha
+      }
+    }
+
+    fetchSession();
   }, []);
 
   async function handleRegister(event: FormEvent<HTMLFormElement>) {
@@ -169,13 +193,23 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Controle de Placas
           </h1>
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
-          >
-            Sair
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {role === "admin" && (
+              <Link
+                href="/admin/cadastro"
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+              >
+                Cadastro de usuários
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+            >
+              Sair
+            </button>
+          </div>
         </div>
         <p className="mt-2 text-sm text-slate-600 sm:text-base">
           Cadastre, busque por trecho (IV, IVG...) e remova placas não autorizadas.

@@ -4,10 +4,13 @@ import clientPromise from "@/lib/mongodb";
 const DB_NAME = "plates_app";
 const COLLECTION_NAME = "users";
 
+export type UserRole = "user" | "admin";
+
 export type UserDocument = {
   _id: ObjectId;
   user: string;
   email: string;
+  role: UserRole;
   passwordHash: string;
   passwordSalt: string;
   createdAt: Date;
@@ -23,14 +26,21 @@ export async function findUserByUsername(username: string) {
   return collection.findOne({ user: username });
 }
 
+export async function findUserByEmail(email: string) {
+  const collection = await getCollection();
+  return collection.findOne({ email });
+}
+
 export async function createUser({
   user,
   email,
+  role,
   passwordHash,
   passwordSalt,
 }: {
   user: string;
   email: string;
+  role: UserRole;
   passwordHash: string;
   passwordSalt: string;
 }) {
@@ -41,6 +51,7 @@ export async function createUser({
   return collection.insertOne({
     user,
     email,
+    role,
     passwordHash,
     passwordSalt,
     createdAt: new Date(),
