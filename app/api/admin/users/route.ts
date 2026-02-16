@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import {
   createUser,
+  ensureUserIndexes,
   findUserByEmail,
   findUserByUsername,
+  listUsers,
   type UserRole,
 } from "@/lib/users";
 import { hashPassword } from "@/lib/password";
+import { getAdminSession } from "@/lib/admin-auth";
 
 function normalizeUsername(value: string) {
   return value.trim();
@@ -16,18 +18,29 @@ function parseRole(value: string): UserRole {
   return value === "admin" ? "admin" : "user";
 }
 
-export async function POST(request: Request) {
+export async function GET() {
+  const result = await getAdminSession();
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
   try {
-    const session = await auth();
+    await ensureUserIndexes();
+    const users = await listUsers();
+    return NextResponse.json({ users });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Falha ao listar usuários." }, { status: 500 });
+  }
+}
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-    }
+export async function POST(request: Request) {
+  const result = await getAdminSession();
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
 
-    if (session.user.role !== "admin") {
-      return NextResponse.json({ error: "Acesso restrito ao administrador." }, { status: 403 });
-    }
-
+  try {
     const body = await request.json();
 
     const user = normalizeUsername(String(body?.user ?? ""));

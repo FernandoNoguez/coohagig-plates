@@ -196,10 +196,10 @@ export default function Home() {
           <div className="flex flex-wrap items-center gap-2">
             {role === "admin" && (
               <Link
-                href="/admin/cadastro"
+                href="/admin/usuarios"
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
               >
-                Cadastro de usuários
+                Gerenciar usuários
               </Link>
             )}
             <button

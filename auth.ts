@@ -26,6 +26,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        if (!user.isActive) {
+          return null;
+        }
+
         const passwordValid = verifyPassword(password, user.passwordHash, user.passwordSalt);
         if (!passwordValid) {
           return null;
@@ -51,6 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     session({ session, token }) {
       if (session.user) {
+        session.user.id = token.sub;
         session.user.role = String(token.role ?? "user") as "user" | "admin";
       }
 

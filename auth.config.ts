@@ -7,7 +7,6 @@ const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const userRole = auth?.user?.role;
       const isPublicPage =
         nextUrl.pathname === "/" ||
         nextUrl.pathname.startsWith("/cadastro") ||
@@ -18,10 +17,6 @@ const authConfig = {
 
       if (!isLoggedIn && !isPublicPage) {
         return false;
-      }
-
-      if (nextUrl.pathname.startsWith("/admin") && userRole !== "admin") {
-        return Response.redirect(new URL("/plates", nextUrl));
       }
 
       if (isLoggedIn && nextUrl.pathname === "/") {
