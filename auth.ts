@@ -14,6 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
+        
         const username = String(credentials?.user ?? "").trim();
         const password = String(credentials?.password ?? "");
 
@@ -48,14 +49,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig.callbacks,
     jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: string }).role ?? "user";
+        token.role = ((user as { role?: string }).role ?? "user") as "user" | "admin";
       }
 
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        session.user.id = token.sub;
+        session.user.id = token.sub ?? "";
         session.user.role = String(token.role ?? "user") as "user" | "admin";
       }
 
