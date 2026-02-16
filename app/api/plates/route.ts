@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { auth } from "@/auth";
 
 const DB_NAME = "plates_app";
 const COLLECTION_NAME = "plates";
 
 function normalizePlate(value: string) {
   return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+
+async function ensureAuthenticated() {
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
+  return null;
 }
 
 async function getCollection() {
@@ -16,6 +28,11 @@ async function getCollection() {
 
 export async function POST(request: Request) {
   try {
+    const unauthorizedResponse = await ensureAuthenticated();
+    if (unauthorizedResponse) {
+      return unauthorizedResponse;
+    }
+
     const body = await request.json();
     const plate = normalizePlate(body?.plate ?? "");
 
@@ -61,6 +78,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const unauthorizedResponse = await ensureAuthenticated();
+    if (unauthorizedResponse) {
+      return unauthorizedResponse;
+    }
+
     const body = await request.json();
     const plate = normalizePlate(body?.plate ?? "");
 
@@ -99,6 +121,11 @@ export async function DELETE(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const unauthorizedResponse = await ensureAuthenticated();
+    if (unauthorizedResponse) {
+      return unauthorizedResponse;
+    }
+
     const { searchParams } = new URL(request.url);
     const recentOnly = searchParams.get("recent") === "1";
 
