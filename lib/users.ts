@@ -81,6 +81,7 @@ export async function createUser({
   await ensureUserIndexes();
 
   return collection.insertOne({
+    _id: new ObjectId(),
     user,
     email,
     role,
