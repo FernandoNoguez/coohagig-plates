@@ -14,6 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
+        
         const username = String(credentials?.user ?? "").trim();
         const password = String(credentials?.password ?? "");
 
